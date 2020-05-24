@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: prod
 
 ---
 
@@ -54,6 +54,55 @@ spring:
           enable: false
         test-connection: true
 
+---
+
+spring:
+  profiles: prod
+
+  datasource:
+    url: ${JDBC_DATABASE_URL}
+    username: ${JDBC_DATABASE_USERNAME}
+    password: ${JDBC_DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  # JPA properties
+  jpa:
+    hibernate:
+      ddl-auto: update # When you launch the application for the first time - switch "none" at "create" after update
+    show-sql: false
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+    generate-ddl: true
+    properties:
+      hibernate:
+        enable_lazy_load_no_trans: true
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
+  #File Upload configuration
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 2KB
+      max-file-size: 200MB
+      max-request-size: 215MB
+  #spring-boot-starter-mail properties
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: noreply.indicame@gmail.com
+    password: indica.me
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+        ssl:
+          enable: false
+        test-connection: true
 
 #File Upload Directory
 file:
@@ -61,29 +110,3 @@ file:
 
 jwt:
   secret: usersecret
-
----
-
-spring:
-  profiles: test
-  datasource:
-    url: jdbc:h2:mem:testdb:DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    platform: h2
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-  jpa:
-    show-sql: true
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: create
-    properties:
-      hibernate:
-        show_sql: true
-        use_sql_comments: true
-        format_sql: true
-    h2:
-      console:
-        enabled: true
-        path: /console
-
