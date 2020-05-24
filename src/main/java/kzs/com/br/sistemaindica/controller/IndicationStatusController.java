@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @CrossOrigin
 @RestController
 @RequestMapping("/api/indicationStatus")
@@ -21,7 +19,7 @@ public class IndicationStatusController {
     private final IndicationStatusService service;
 
     @GetMapping
-    public ResponseEntity<List<IndicationStatus>> listAll() {
+    public ResponseEntity<IndicationStatus[]> listAll() {
         return ResponseEntity.ok(service.listAll());
     }
 
