@@ -61,8 +61,8 @@ public class EmailServiceImpl implements EmailService {
         message.setSubject("Indica.Me - Bonficação enviada :D ");
         message.setText(
                         "Olá " + emailUser +  " .\n " +
-                        "Informamos que foi depositada a sua bonficação referente a indicação de " + indicationName + ".\n" +
-                        "Agora é só aproveitar!" +
+                        "Informamos que foi depositada a sua bonificação referente a indicação de " + indicationName + ".\n" +
+                        "Agora é só aproveitar!\n" +
                         "Até mais!");
         message.setTo(emailUser);
         message.setFrom("noreply.indicame@gmail.com");

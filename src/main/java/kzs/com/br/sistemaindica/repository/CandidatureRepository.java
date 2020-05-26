@@ -58,7 +58,7 @@ public interface CandidatureRepository extends JpaRepository<Candidature, Long> 
 
     @Query("SELECT count(c) " +
             " FROM Candidature c " +
-            "WHERE c.status = 'IN_PROGRESS'")
+            "WHERE c.status in ('IN_PROGRESS', 'PRE_EVALUATION_OK', 'PRE_EVALUATION_NOK')")
     int countCandidatureStatusInProgress();
 
     @Query("SELECT count(c) " +

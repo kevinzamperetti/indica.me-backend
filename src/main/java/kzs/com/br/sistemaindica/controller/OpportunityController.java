@@ -25,8 +25,10 @@ public class OpportunityController {
     private final OpportunityService service;
 
     @GetMapping
-    public ResponseEntity<Set<Opportunity>> listAll(@RequestParam(value = "enabled", required = false) Boolean enabled) {
-        return ResponseEntity.ok(repository.findOpportunityByEnabled(enabled));
+    public ResponseEntity<Set<Opportunity>> listAll(@RequestParam(value = "enabled", required = false) Boolean enabled,
+                                                    @RequestParam(value = "users", required = false, defaultValue = "false") Boolean users) {
+        service.findOpportunities(enabled, users);
+        return ResponseEntity.ok(service.findOpportunities(enabled, users));
     }
 
     @GetMapping(path = "/select")
