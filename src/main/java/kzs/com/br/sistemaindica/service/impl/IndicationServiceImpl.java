@@ -1,17 +1,13 @@
 package kzs.com.br.sistemaindica.service.impl;
 
-import kzs.com.br.sistemaindica.entity.Indication;
-import kzs.com.br.sistemaindica.entity.Opportunity;
-import kzs.com.br.sistemaindica.entity.User;
+import kzs.com.br.sistemaindica.entity.*;
 import kzs.com.br.sistemaindica.entity.dto.IndicationQuantityDto;
 import kzs.com.br.sistemaindica.entity.dto.IndicationStatusDto;
 import kzs.com.br.sistemaindica.entity.dto.IndicationUserQuantityDto;
 import kzs.com.br.sistemaindica.enums.IndicationStatus;
 import kzs.com.br.sistemaindica.exception.*;
 import kzs.com.br.sistemaindica.payload.UploadFileResponse;
-import kzs.com.br.sistemaindica.repository.IndicationRepository;
-import kzs.com.br.sistemaindica.repository.OpportunityRepository;
-import kzs.com.br.sistemaindica.repository.UserRepository;
+import kzs.com.br.sistemaindica.repository.*;
 import kzs.com.br.sistemaindica.service.EmailService;
 import kzs.com.br.sistemaindica.service.IndicationHistoryService;
 import kzs.com.br.sistemaindica.service.IndicationService;
@@ -24,7 +20,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -38,6 +36,10 @@ public class IndicationServiceImpl implements IndicationService {
     private final OpportunityRepository opportunityRepository;
 
     private final UserRepository userRepository;
+
+    private final KeyWordRepository keyWordRepository;
+
+    private final KeyWordIndicationRepository keyWordIndicationRepository;
 
     private final IndicationHistoryService indicationHistoryService;
 
@@ -66,6 +68,7 @@ public class IndicationServiceImpl implements IndicationService {
     }
 
     @Override
+    @Transactional
     public Indication save(Indication indication) {
         if (nonNull(indication.getId())) {
             throw new IndicationIdMustNotBeProvidedException("Id da Indicação não deve ser informado.");
@@ -76,6 +79,7 @@ public class IndicationServiceImpl implements IndicationService {
         validateUserAndIndication(indication);
         indication.setCreationDate(LocalDate.now());
         checkIfTheIndicationAlreadyExists(indication);
+        setKeyWordIndication(indication);
 
         Indication indicationSaved = repository.save(indication);
         setIndicationHistory(indicationSaved);
@@ -105,6 +109,21 @@ public class IndicationServiceImpl implements IndicationService {
         User user = userRepository.findById(indication.getUser().getId())
                 .orElseThrow(() -> new IndicationIdNotFoundException("Usuário não encontrado"));
         indication.setUser(user);
+    }
+
+    private void setKeyWordIndication(Indication indication) {
+        List<KeyWord> keyWords = keyWordRepository.findByOpportunityId(indication.getOpportunity().getId());
+        Set<KeyWordIndication> list = new HashSet<>();
+        keyWords.forEach(keyWord -> {
+            KeyWordIndication keyWordIndication = KeyWordIndication.builder()
+                    .indication(indication)
+                    .word(keyWord.getWord())
+                    .found(false)
+                    .build();
+            keyWordIndicationRepository.save(keyWordIndication);
+            list.add(keyWordIndication);
+        });
+        indication.setKeyWordIndications(list);
     }
 
     private void checkIfTheIndicationAlreadyExists(Indication indication) {

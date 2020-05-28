@@ -1,16 +1,12 @@
 package kzs.com.br.sistemaindica.service.impl;
 
-import kzs.com.br.sistemaindica.entity.Candidature;
-import kzs.com.br.sistemaindica.entity.Opportunity;
-import kzs.com.br.sistemaindica.entity.User;
+import kzs.com.br.sistemaindica.entity.*;
 import kzs.com.br.sistemaindica.entity.dto.CandidatureQuantityDto;
 import kzs.com.br.sistemaindica.entity.dto.CandidatureStatusDto;
 import kzs.com.br.sistemaindica.enums.CandidatureStatus;
 import kzs.com.br.sistemaindica.exception.*;
 import kzs.com.br.sistemaindica.payload.UploadFileResponse;
-import kzs.com.br.sistemaindica.repository.CandidatureRepository;
-import kzs.com.br.sistemaindica.repository.OpportunityRepository;
-import kzs.com.br.sistemaindica.repository.UserRepository;
+import kzs.com.br.sistemaindica.repository.*;
 import kzs.com.br.sistemaindica.service.CandidatureHistoryService;
 import kzs.com.br.sistemaindica.service.CandidatureService;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +17,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -35,6 +33,10 @@ public class CandidatureServiceImpl implements CandidatureService {
     private final OpportunityRepository opportunityRepository;
 
     private final UserRepository userRepository;
+
+    private final KeyWordRepository keyWordRepository;
+
+    private final KeyWordCandidatureRepository keyWordCandidatureRepository;
 
     private final CandidatureHistoryService candidatureHistoryService;
 
@@ -59,6 +61,7 @@ public class CandidatureServiceImpl implements CandidatureService {
     }
 
     @Override
+    @Transactional
     public Candidature save(Candidature candidature) {
         if (nonNull(candidature.getId())) {
             throw new CandidatureIdMustNotBeProvidedException("Id da Candidatura não deve ser informado");
@@ -68,6 +71,7 @@ public class CandidatureServiceImpl implements CandidatureService {
         setUser(candidature);
         candidature.setCreationDate(LocalDate.now());
         checkIfTheCandidatureAlreadyExists(candidature);
+        setKeyWordCandidature(candidature);
 
         Candidature candidatureSaved = repository.save(candidature);
         setCandidatureHistory(candidatureSaved);
@@ -97,6 +101,21 @@ public class CandidatureServiceImpl implements CandidatureService {
         User user = userRepository.findById(candidature.getUser().getId())
                 .orElseThrow(() -> new CandidatureIdNotFoundException("Usuário não encontrado"));
         candidature.setUser(user);
+    }
+
+    private void setKeyWordCandidature(Candidature candidature) {
+        List<KeyWord> keyWords = keyWordRepository.findByOpportunityId(candidature.getOpportunity().getId());
+        Set<KeyWordCandidature> list = new HashSet<>();
+        keyWords.forEach(keyWord -> {
+            KeyWordCandidature keyWordCandidature = KeyWordCandidature.builder()
+                    .candidature(candidature)
+                    .word(keyWord.getWord())
+                    .found(false)
+                    .build();
+            keyWordCandidatureRepository.save(keyWordCandidature);
+            list.add(keyWordCandidature);
+        });
+        candidature.setKeyWordCandidaturies(list);
     }
 
     private void checkIfTheCandidatureAlreadyExists(Candidature candidature) {

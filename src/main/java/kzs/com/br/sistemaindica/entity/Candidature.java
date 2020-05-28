@@ -36,6 +36,10 @@ public class Candidature extends BaseEntity {
 
     @JsonIgnore
     @OneToMany(mappedBy = "candidature", fetch = LAZY)
+    private Set<KeyWordCandidature> keyWordCandidaturies;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "candidature", fetch = LAZY)
     private Set<CandidatureHistory> candidatureHistories;
 
 //    revisar tipo pra este campo

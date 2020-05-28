@@ -35,6 +35,10 @@ public class Indication extends BaseEntity {
     @JoinColumn(name = "id_opportunity", referencedColumnName = "id_opportunity")
     private Opportunity opportunity;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "indication", fetch = LAZY)
+    private Set<KeyWordIndication> keyWordIndications;
+
     @JsonIgnoreProperties("indication") //aqui
     @JsonIgnore
     @OneToMany(mappedBy = "indication", fetch = LAZY)
