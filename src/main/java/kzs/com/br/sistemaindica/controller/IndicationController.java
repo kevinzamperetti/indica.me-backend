@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.ACCEPTED;
@@ -57,6 +58,12 @@ public class IndicationController {
         return ResponseEntity.ok(service.totalIndicationsByUser(userEmail));
     }
 
+    @GetMapping(path = "/test")
+    public void totalIndicationsByUser(
+            @RequestParam(value = "id", required = false) Long id) throws IOException {
+        service.findKeyWordInIndication(id);
+    }
+
     @PutMapping(path = "/{id}")
     public ResponseEntity<Indication> edit(@PathVariable(value = "id") Long id, @RequestBody Indication indication) {
         return ResponseEntity.status(ACCEPTED).body(service.edit(indication));
@@ -68,7 +75,7 @@ public class IndicationController {
     }
 
     @PostMapping
-    public ResponseEntity<Indication> save(@Valid @RequestBody Indication indication) {
+    public ResponseEntity<Indication> save(@Valid @RequestBody Indication indication) throws IOException {
         return ResponseEntity.status(CREATED).body(service.save(indication));
     }
 

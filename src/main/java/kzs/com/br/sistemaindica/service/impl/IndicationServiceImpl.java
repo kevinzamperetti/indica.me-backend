@@ -13,16 +13,21 @@ import kzs.com.br.sistemaindica.service.IndicationHistoryService;
 import kzs.com.br.sistemaindica.service.IndicationService;
 import kzs.com.br.sistemaindica.service.IndicationWinnerService;
 import lombok.RequiredArgsConstructor;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.PDFTextStripperByArea;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -69,7 +74,7 @@ public class IndicationServiceImpl implements IndicationService {
 
     @Override
     @Transactional
-    public Indication save(Indication indication) {
+    public Indication save(Indication indication) throws IOException {
         if (nonNull(indication.getId())) {
             throw new IndicationIdMustNotBeProvidedException("Id da Indicação não deve ser informado.");
         }
@@ -83,6 +88,7 @@ public class IndicationServiceImpl implements IndicationService {
 
         Indication indicationSaved = repository.save(indication);
         setIndicationHistory(indicationSaved);
+        findKeyWordInIndication(indication.getId());
         return indicationSaved;
     }
 
@@ -113,7 +119,7 @@ public class IndicationServiceImpl implements IndicationService {
 
     private void setKeyWordIndication(Indication indication) {
         List<KeyWord> keyWords = keyWordRepository.findByOpportunityId(indication.getOpportunity().getId());
-        Set<KeyWordIndication> list = new HashSet<>();
+        List<KeyWordIndication> list = new ArrayList<>();
         keyWords.forEach(keyWord -> {
             KeyWordIndication keyWordIndication = KeyWordIndication.builder()
                     .indication(indication)
@@ -242,4 +248,60 @@ public class IndicationServiceImpl implements IndicationService {
                 .build();
     }
 
+//    private void findKeyWordInIndication(Indication indication) throws IOException {
+    @Override
+    public void findKeyWordInIndication(Long id) throws IOException {
+        Indication indication = findById(id);
+
+        File file = null;
+        Resource resource = fileStorageService.loadFileAsResource(indication.getFileNameAttachment());
+
+        if (nonNull(resource)) {
+            file = resource.getFile();
+        }
+
+        try (PDDocument document = PDDocument.load( file )) {
+            if (!document.isEncrypted()) {
+                PDFTextStripperByArea stripper = new PDFTextStripperByArea();
+                stripper.setSortByPosition(true);
+
+                PDFTextStripper tStripper = new PDFTextStripper();
+
+                String pdfFileInText = tStripper.getText(document);
+
+                String lines[] = pdfFileInText.split("\\r?\\n");
+                List<KeyWordIndication> words = indication.getKeyWordIndications();
+
+                words.forEach( word -> {
+                    for (String line : lines) {
+                        if (line.toUpperCase().contains(word.getWord().toUpperCase())) {
+                            word.setFound(true);
+                            keyWordIndicationRepository.save(word);
+                            break;
+                        }
+                    }
+                });
+            }
+            updateStatusAfterFindKeyWord(indication);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public Indication updateStatusAfterFindKeyWord(Indication indication) {
+        Integer automaticEvaluationQuantity = indication.getOpportunity().getAutomaticEvaluationQuantity();
+        Long qtykeyWordTrue = indication.getKeyWordIndications().stream().filter(w -> Boolean.TRUE.equals(w.getFound())).count();
+
+        if (qtykeyWordTrue >= automaticEvaluationQuantity) {
+            indication.setStatus(IndicationStatus.PRE_EVALUATION_OK);
+        } else {
+            indication.setStatus(IndicationStatus.PRE_EVALUATION_NOK);
+        }
+
+        Indication indicationSaved = repository.save(indication);
+        setIndicationHistory(indicationSaved);
+
+        return indicationSaved;
+    }
 }

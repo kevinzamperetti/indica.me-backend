@@ -9,6 +9,7 @@ import kzs.com.br.sistemaindica.payload.UploadFileResponse;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface IndicationService {
@@ -19,7 +20,7 @@ public interface IndicationService {
 
     List<Indication> findByUser(Long id);
 
-    Indication save(Indication indication);
+    Indication save(Indication indication) throws IOException;
 
     UploadFileResponse uploadAttachment(@RequestParam("file") MultipartFile file);
 
@@ -33,4 +34,8 @@ public interface IndicationService {
 
     IndicationUserQuantityDto totalIndicationsByUser(String userEmail);
 
+    //    private void findKeyWordInIndication(Indication indication) throws IOException {
+    void findKeyWordInIndication(Long id) throws IOException;
+
+    Indication updateStatusAfterFindKeyWord(Indication indication);
 }

@@ -7,6 +7,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 import static javax.persistence.FetchType.LAZY;
@@ -37,7 +38,7 @@ public class Indication extends BaseEntity {
 
     @JsonIgnore
     @OneToMany(mappedBy = "indication", fetch = LAZY)
-    private Set<KeyWordIndication> keyWordIndications;
+    private List<KeyWordIndication> keyWordIndications;
 
     @JsonIgnoreProperties("indication") //aqui
     @JsonIgnore
