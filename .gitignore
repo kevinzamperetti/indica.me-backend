@@ -42,3 +42,4 @@ node_modules
 /ant/
 /backend/attachments/
 /backend/.idea/workspace.xml
+/attachments/

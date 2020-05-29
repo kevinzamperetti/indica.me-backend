@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.ACCEPTED;
@@ -59,7 +60,7 @@ public class CandidatureController {
     }
 
     @PostMapping
-    public ResponseEntity<Candidature> save(@RequestBody Candidature candidature) {
+    public ResponseEntity<Candidature> save(@RequestBody Candidature candidature) throws IOException {
         return ResponseEntity.status(CREATED).body(service.save(candidature));
     }
 

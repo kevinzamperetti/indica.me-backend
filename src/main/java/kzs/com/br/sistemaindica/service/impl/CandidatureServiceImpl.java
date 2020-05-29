@@ -10,16 +10,21 @@ import kzs.com.br.sistemaindica.repository.*;
 import kzs.com.br.sistemaindica.service.CandidatureHistoryService;
 import kzs.com.br.sistemaindica.service.CandidatureService;
 import lombok.RequiredArgsConstructor;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.PDFTextStripperByArea;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -62,7 +67,7 @@ public class CandidatureServiceImpl implements CandidatureService {
 
     @Override
     @Transactional
-    public Candidature save(Candidature candidature) {
+    public Candidature save(Candidature candidature) throws IOException {
         if (nonNull(candidature.getId())) {
             throw new CandidatureIdMustNotBeProvidedException("Id da Candidatura não deve ser informado");
         }
@@ -75,6 +80,7 @@ public class CandidatureServiceImpl implements CandidatureService {
 
         Candidature candidatureSaved = repository.save(candidature);
         setCandidatureHistory(candidatureSaved);
+        findKeyWordInCandidature(candidature.getId());
         return candidatureSaved;
     }
 
@@ -105,7 +111,7 @@ public class CandidatureServiceImpl implements CandidatureService {
 
     private void setKeyWordCandidature(Candidature candidature) {
         List<KeyWord> keyWords = keyWordRepository.findByOpportunityId(candidature.getOpportunity().getId());
-        Set<KeyWordCandidature> list = new HashSet<>();
+        List<KeyWordCandidature> list = new ArrayList<>();
         keyWords.forEach(keyWord -> {
             KeyWordCandidature keyWordCandidature = KeyWordCandidature.builder()
                     .candidature(candidature)
@@ -122,7 +128,7 @@ public class CandidatureServiceImpl implements CandidatureService {
         if (repository.findByCandidatureEmailOrIndicationNameOrIndicationPhoneNumber(
                 candidature.getCandidateEmail(), candidature.getCandidateName(),
                 candidature.getCandidatePhoneNumber()).isPresent()) {
-            throw new CandidatureYouAreAlreadyAppliedForThisOpportunityException("Você já está inscrito para esta oportunidade");
+            throw new CandidatureYouAreAlreadyAppliedForThisOpportunityException("Você já está participando de uma candidatura");
         }
     }
 
@@ -200,5 +206,61 @@ public class CandidatureServiceImpl implements CandidatureService {
                 .qtyCandidaturiesHired(repository.countCandidatureStatusHired())
                 .qtyCandidaturiesDiscarded(repository.countCandidatureStatusDiscarded())
                 .build();
+    }
+
+    @Override
+    public void findKeyWordInCandidature(Long id) throws IOException {
+        Candidature candidature = findById(id);
+
+        File file = null;
+        Resource resource = fileStorageService.loadFileAsResource(candidature.getFileNameAttachment());
+
+        if (nonNull(resource)) {
+            file = resource.getFile();
+        }
+
+        try (PDDocument document = PDDocument.load( file )) {
+            if (!document.isEncrypted()) {
+                PDFTextStripperByArea stripper = new PDFTextStripperByArea();
+                stripper.setSortByPosition(true);
+
+                PDFTextStripper tStripper = new PDFTextStripper();
+
+                String pdfFileInText = tStripper.getText(document);
+
+                String lines[] = pdfFileInText.split("\\r?\\n");
+                List<KeyWordCandidature> words = candidature.getKeyWordCandidaturies();
+
+                words.forEach( word -> {
+                    for (String line : lines) {
+                        if (line.toUpperCase().contains(word.getWord().toUpperCase())) {
+                            word.setFound(true);
+                            keyWordCandidatureRepository.save(word);
+                            break;
+                        }
+                    }
+                });
+            }
+            updateStatusAfterFindKeyWord(candidature);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public Candidature updateStatusAfterFindKeyWord(Candidature candidature) {
+        Integer automaticEvaluationQuantity = candidature.getOpportunity().getAutomaticEvaluationQuantity();
+        Long qtykeyWordTrue = candidature.getKeyWordCandidaturies().stream().filter(w -> Boolean.TRUE.equals(w.getFound())).count();
+
+        if (qtykeyWordTrue >= automaticEvaluationQuantity) {
+            candidature.setStatus(CandidatureStatus.PRE_EVALUATION_OK);
+        } else {
+            candidature.setStatus(CandidatureStatus.PRE_EVALUATION_NOK);
+        }
+
+        Candidature candidatureSaved = repository.save(candidature);
+        setCandidatureHistory(candidatureSaved);
+
+        return candidatureSaved;
     }
 }

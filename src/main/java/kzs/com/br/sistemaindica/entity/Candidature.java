@@ -7,6 +7,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 import static javax.persistence.FetchType.LAZY;
@@ -36,7 +37,7 @@ public class Candidature extends BaseEntity {
 
     @JsonIgnore
     @OneToMany(mappedBy = "candidature", fetch = LAZY)
-    private Set<KeyWordCandidature> keyWordCandidaturies;
+    private List<KeyWordCandidature> keyWordCandidaturies;
 
     @JsonIgnore
     @OneToMany(mappedBy = "candidature", fetch = LAZY)

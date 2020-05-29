@@ -39,7 +39,7 @@ public interface IndicationRepository extends JpaRepository<Indication, Long> {
 //            " LEFT JOIN FETCH i.indicationHistories ih " +
 //            " LEFT JOIN FETCH i.indicationWinner iw " +
             "WHERE (:status IS NULL OR i.status = :status) " +
-            "ORDER BY i.creationDate, i.status")
+            "ORDER BY i.creationDate DESC, i.status")
     List<Indication> findIndicationByStatus(@Param("status") IndicationStatus status);
 
     @Query("SELECT i " +
