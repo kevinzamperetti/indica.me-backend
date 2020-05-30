@@ -35,7 +35,7 @@ public interface CandidatureRepository extends JpaRepository<Candidature, Long> 
             " LEFT JOIN FETCH c.opportunity o " +
 //            " LEFT JOIN FETCH c.candidatureHistories ch " +
             "WHERE (:status IS NULL OR c.status = :status) " +
-            "ORDER BY c.creationDate, c.status")
+            "ORDER BY c.creationDate DESC, c.status")
     List<Candidature> findCandidatureByStatus(@Param("status") CandidatureStatus status);
 
     @Query("SELECT c " +
@@ -58,7 +58,7 @@ public interface CandidatureRepository extends JpaRepository<Candidature, Long> 
 
     @Query("SELECT count(c) " +
             " FROM Candidature c " +
-            "WHERE c.status = 'IN_PROGRESS'")
+            "WHERE c.status in ('IN_PROGRESS', 'PRE_EVALUATION_OK', 'PRE_EVALUATION_NOK')")
     int countCandidatureStatusInProgress();
 
     @Query("SELECT count(c) " +

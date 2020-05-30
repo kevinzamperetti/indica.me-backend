@@ -7,6 +7,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 import static javax.persistence.FetchType.LAZY;
@@ -33,6 +34,10 @@ public class Candidature extends BaseEntity {
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "id_opportunity", referencedColumnName = "id_opportunity")
     private Opportunity opportunity;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "candidature", fetch = LAZY)
+    private List<KeyWordCandidature> keyWordCandidaturies;
 
     @JsonIgnore
     @OneToMany(mappedBy = "candidature", fetch = LAZY)

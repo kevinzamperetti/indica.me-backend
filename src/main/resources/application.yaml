@@ -54,6 +54,13 @@ spring:
           enable: false
         test-connection: true
 
+#File Upload Directory
+file:
+  upload-dir: ./attachments/
+
+jwt:
+  secret: usersecret
+
 ---
 
 spring:

@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -124,6 +125,15 @@ public class OpportunityServiceImpl implements OpportunityService {
                 .qtyOpportunitiesEnabled(repository.countOpportunitiesByEnabledIsTrue())
                 .qtyOpportunitiesDisabled(repository.countOpportunitiesByEnabledIsFalse())
                 .build();
+    }
+
+    @Override
+    public Set<Opportunity> findOpportunities(Boolean enabled, Boolean users) {
+        if (users) {
+            return repository.findOpportunityForUsers();
+        } else {
+            return repository.findOpportunityByEnabled(enabled);
+        }
     }
 
 }

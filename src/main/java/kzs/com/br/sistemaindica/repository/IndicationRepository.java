@@ -39,7 +39,7 @@ public interface IndicationRepository extends JpaRepository<Indication, Long> {
 //            " LEFT JOIN FETCH i.indicationHistories ih " +
 //            " LEFT JOIN FETCH i.indicationWinner iw " +
             "WHERE (:status IS NULL OR i.status = :status) " +
-            "ORDER BY i.creationDate, i.status")
+            "ORDER BY i.creationDate DESC, i.status")
     List<Indication> findIndicationByStatus(@Param("status") IndicationStatus status);
 
     @Query("SELECT i " +
@@ -62,12 +62,12 @@ public interface IndicationRepository extends JpaRepository<Indication, Long> {
 
     @Query("SELECT count(i) " +
             " FROM Indication i " +
-            "WHERE i.status = 'IN_PROGRESS'")
+            "WHERE i.status in ('IN_PROGRESS', 'PRE_EVALUATION_OK', 'PRE_EVALUATION_NOK')")
     int countIndicationStatusInProgress();
 
     @Query("SELECT count(i) " +
             " FROM Indication i " +
-            "WHERE i.status = 'HIRED'")
+            "WHERE i.status in ('HIRED', 'SENDING_BONUS', 'BONUS_SENT')")
     int countIndicationStatusHired();
 
     @Query("SELECT count(i) " +
@@ -78,13 +78,13 @@ public interface IndicationRepository extends JpaRepository<Indication, Long> {
     @Query("SELECT count(i) " +
             " FROM Indication i " +
             "WHERE i.user.email = :email" +
-            "  AND i.status in ('NEW', 'IN_PROGRESS')")
+            "  AND i.status in ('NEW', 'IN_PROGRESS', 'PRE_EVALUATION_OK', 'PRE_EVALUATION_NOK')")
     int countIndicationsInProgressByUser(@Param("email") String email);
 
     @Query("SELECT count(i) " +
             " FROM Indication i " +
             "WHERE i.user.email = :email" +
-            "  AND i.status = 'HIRED'")
+            "  AND i.status in ('HIRED', 'SENDING_BONUS', 'BONUS_SENT')")
     int countIndicationsHiredByUser(@Param("email") String email);
 
     @Query("SELECT count(i) " +
