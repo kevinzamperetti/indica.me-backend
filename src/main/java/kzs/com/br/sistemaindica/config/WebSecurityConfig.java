@@ -48,7 +48,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/login", "/api/bankData", "/api/user/register");
+        web.ignoring().antMatchers("/", "/login", "/api/bankData", "/api/user/register");
     }
 
     @Override
@@ -58,7 +58,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
         // Não cheque essas requisições
                 .authorizeRequests()
-                .antMatchers("/login", "/api/bankData", "/api/user/register", "/api/user/forgotPassword", "/v2/api-docs",
+                .antMatchers("/", "/login", "/api/bankData", "/api/user/register", "/api/user/forgotPassword", "/v2/api-docs",
                                          "/configuration/ui", "/swagger-resources/**", "/configuration/**", "/swagger-ui.html", "/webjars/**")
                 .permitAll()
         // Qualquer outra requisição deve ser checada
