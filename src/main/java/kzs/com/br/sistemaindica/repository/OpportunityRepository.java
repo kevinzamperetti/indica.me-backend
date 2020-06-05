@@ -28,7 +28,7 @@ public interface OpportunityRepository extends JpaRepository<Opportunity, Long> 
             " LEFT JOIN FETCH o.indications " +
             " LEFT JOIN FETCH o.keyWords " +
             "WHERE (:enabled IS NULL OR o.enabled = :enabled) " +
-            "ORDER BY o.expirationDate, o.name")
+            "ORDER BY o.name, o.expirationDate")
     Set<Opportunity> findOpportunityByEnabled(@Param("enabled") Boolean enabled);
 
     @Query("SELECT o " +
@@ -39,7 +39,7 @@ public interface OpportunityRepository extends JpaRepository<Opportunity, Long> 
             " LEFT JOIN FETCH o.keyWords " +
             "WHERE o.enabled = true " +
             "  AND o.expirationDate >= CURRENT_DATE " +
-            "ORDER BY o.expirationDate, o.name")
+            "ORDER BY o.name, o.expirationDate")
     Set<Opportunity> findOpportunityForUsers();
 
     @Query("SELECT o " +
