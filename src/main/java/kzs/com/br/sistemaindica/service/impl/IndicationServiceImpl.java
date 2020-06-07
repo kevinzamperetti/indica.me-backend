@@ -168,14 +168,17 @@ public class IndicationServiceImpl implements IndicationService {
 
         if (IndicationStatus.HIRED.equals(indicationStatusDto.getStatus())) {
 //            setIndicationWinner(indicationSaved); //se for salvar tem que tratar para se já existir registro excluir, se não da erro de id com mais de um registro
-            emailService.sendEmailWhenIndicationHired(indication.getUser().getEmail(), indication.getIndicationName());
+            if (indication.getOpportunity().getBonusLevel().getValue() > 0) {
+                emailService.sendEmailWhenIndicationHired(indication.getUser().getEmail(), indication.getIndicationName());
+            }
 
             indication.setStatus(IndicationStatus.SENDING_BONUS);
             indicationSaved = repository.save(indication);
             setIndicationHistory(indication);
         }
         if (IndicationStatus.BONUS_SENT.equals(indicationStatusDto.getStatus()) &&
-                IndicationStatus.SENDING_BONUS.equals(previousStatus)) {
+                IndicationStatus.SENDING_BONUS.equals(previousStatus) &&
+                indication.getOpportunity().getBonusLevel().getValue() > 0) {
             emailService.sendEmailWhenIndicationBonusSent(indication.getUser().getEmail(), indication.getIndicationName());
         }
         return indicationSaved;
