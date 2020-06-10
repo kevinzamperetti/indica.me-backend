@@ -80,4 +80,16 @@ public class FileStorageServiceImpl {
             throw new MyFileNotFoundException("File " + fileName + " não encontrado", ex);
         }
     }
+
+    public Resource getResourceByFileName(String fileName) {
+        try {
+            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+            return resource;
+        } catch (MalformedURLException ex) {
+            throw new MyFileNotFoundException("File " + fileName + " não encontrado", ex);
+        }
+    }
+
+
 }

@@ -93,5 +93,7 @@ public interface IndicationRepository extends JpaRepository<Indication, Long> {
             "  AND i.status = 'DISCARDED'")
     int countIndicationsDiscardedByUser(@Param("email") String email);
 
+    Indication findByFileNameAttachment(@Param("fileNameAttachment") String fileNameAttachment);
+
 
 }

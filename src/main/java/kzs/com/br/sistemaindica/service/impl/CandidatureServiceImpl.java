@@ -22,6 +22,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +76,12 @@ public class CandidatureServiceImpl implements CandidatureService {
         verifyFields(candidature);
         setOpportunity(candidature);
         setUser(candidature);
+
+        String filePath = fileStorageService.getResourceByFileName(candidature.getFileNameAttachment()).getFile().getPath();
+        byte[] inFileBytes = Files.readAllBytes(Paths.get(filePath));
+        byte[] encoded = java.util.Base64.getEncoder().encode(inFileBytes);
+        candidature.setAttachment(encoded);
+
         candidature.setCreationDate(LocalDate.now());
         checkIfTheCandidatureAlreadyExists(candidature);
         setKeyWordCandidature(candidature);

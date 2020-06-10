@@ -1,6 +1,11 @@
 package kzs.com.br.sistemaindica.controller;
 
+import kzs.com.br.sistemaindica.entity.Candidature;
+import kzs.com.br.sistemaindica.entity.Indication;
+import kzs.com.br.sistemaindica.exception.MyFileNotFoundException;
 import kzs.com.br.sistemaindica.payload.UploadFileResponse;
+import kzs.com.br.sistemaindica.repository.CandidatureRepository;
+import kzs.com.br.sistemaindica.repository.IndicationRepository;
 import kzs.com.br.sistemaindica.service.impl.FileStorageServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -19,6 +24,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +40,10 @@ public class FileController {
     private static final Logger logger = LoggerFactory.getLogger(FileController.class);
 
     private final FileStorageServiceImpl fileStorageService;
+
+    private final IndicationRepository indicationRepository;
+
+    private final CandidatureRepository candidatureRepository;
 
     @PostMapping("/uploadFile")
     public UploadFileResponse uploadFile(@RequestParam("file") MultipartFile file) {
@@ -56,28 +66,68 @@ public class FileController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/downloadFile/{fileName:.+}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
-        // Load file as Resource
-        Resource resource = fileStorageService.loadFileAsResource(fileName);
+    @GetMapping("/indication/downloadFile/{fileName:.+}")
+    public ResponseEntity<Resource> downloadFileIndication(@PathVariable String fileName, HttpServletRequest request) throws IOException {
 
-        // Try to determine file's content type
-        String contentType = null;
-        try {
-            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-        } catch (IOException ex) {
-            logger.info("Could not determine file type.");
-        }
+        Resource resource = null;
+        Indication indication = indicationRepository.findByFileNameAttachment(fileName);
 
-        // Fallback to the default content type if type could not be determined
+        String contentType = indication.getFileTypeAttachment();
         if(contentType == null) {
             contentType = "application/octet-stream";
         }
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
+        try {
+            resource = fileStorageService.loadFileAsResource(fileName);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+        } catch (MyFileNotFoundException e) {
+            byte[] decoded = java.util.Base64.getDecoder().decode(indication.getAttachment());
+            String filaPath = fileStorageService.getResourceByFileName(fileName).getFile().getPath();
+            FileOutputStream fos = new FileOutputStream(filaPath);
+            fos.write(decoded);
+            fos.flush();
+            fos.close();
+            resource = fileStorageService.loadFileAsResource(fileName);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+        }
+    }
+
+    @GetMapping("/candidature/downloadFile/{fileName:.+}")
+    public ResponseEntity<Resource> downloadFileCandidature(@PathVariable String fileName, HttpServletRequest request) throws IOException {
+
+        Resource resource = null;
+        Candidature candidature = candidatureRepository.findByFileNameAttachment(fileName);
+
+        String contentType = candidature.getFileTypeAttachment();
+        if(contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        try {
+            resource = fileStorageService.loadFileAsResource(fileName);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+        } catch (MyFileNotFoundException e) {
+            byte[] decoded = java.util.Base64.getDecoder().decode(candidature.getAttachment());
+            String filaPath = fileStorageService.getResourceByFileName(fileName).getFile().getPath();
+            FileOutputStream fos = new FileOutputStream(filaPath);
+            fos.write(decoded);
+            fos.flush();
+            fos.close();
+            resource = fileStorageService.loadFileAsResource(fileName);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+        }
     }
 
     @GetMapping(path = "/teste/{fileName:.+}")

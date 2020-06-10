@@ -25,6 +25,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,6 +83,12 @@ public class IndicationServiceImpl implements IndicationService {
         verifyFields(indication);
         setOpportunity(indication);
         setUser(indication);
+
+        String filePath = fileStorageService.getResourceByFileName(indication.getFileNameAttachment()).getFile().getPath();
+        byte[] inFileBytes = Files.readAllBytes(Paths.get(filePath));
+        byte[] encoded = java.util.Base64.getEncoder().encode(inFileBytes);
+        indication.setAttachment(encoded);
+
         validateUserAndIndication(indication);
         indication.setCreationDate(LocalDate.now());
         checkIfTheIndicationAlreadyExists(indication);

@@ -43,8 +43,7 @@ public class Candidature extends BaseEntity {
     @OneToMany(mappedBy = "candidature", fetch = LAZY)
     private Set<CandidatureHistory> candidatureHistories;
 
-//    revisar tipo pra este campo
-//    private FileUpload attachment;
+    private byte[] attachment;
 
     @Column(name = "file_name_attachment")
     private String fileNameAttachment;

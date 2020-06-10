@@ -71,4 +71,6 @@ public interface CandidatureRepository extends JpaRepository<Candidature, Long> 
             "WHERE c.status = 'DISCARDED'")
     int countCandidatureStatusDiscarded();
 
+    Candidature findByFileNameAttachment(@Param("fileNameAttachment") String fileNameAttachment);
+
 }
