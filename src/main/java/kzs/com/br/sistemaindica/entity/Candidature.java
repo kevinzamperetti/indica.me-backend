@@ -43,6 +43,7 @@ public class Candidature extends BaseEntity {
     @OneToMany(mappedBy = "candidature", fetch = LAZY)
     private Set<CandidatureHistory> candidatureHistories;
 
+    @JsonIgnore
     private byte[] attachment;
 
     @Column(name = "file_name_attachment")

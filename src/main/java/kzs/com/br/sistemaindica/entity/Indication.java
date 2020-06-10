@@ -45,6 +45,7 @@ public class Indication extends BaseEntity {
     @OneToMany(mappedBy = "indication", fetch = LAZY)
     private Set<IndicationHistory> indicationHistories;
 
+    @JsonIgnore
     private byte[] attachment;
 
     @Column(name = "file_name_attachment")
