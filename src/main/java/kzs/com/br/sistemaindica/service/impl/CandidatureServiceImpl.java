@@ -97,7 +97,7 @@ public class CandidatureServiceImpl implements CandidatureService {
         String fileName = fileStorageService.storeFile(file);
 
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/file/downloadFile/")
+                .path("/api/file/candidature/downloadFile/")
                 .path(fileName)
                 .toUriString();
 
